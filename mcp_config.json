@@ -1,0 +1,89 @@
+{
+  "mcpServers": {
+    "stitch": {
+      "serverUrl": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "AIzaSyDrLXLqePkkycgqCPiVgxyxJ3apfp0lMyc"
+      },
+      "disabled": true
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--prefer-offline",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
+    "github-mcp-server": {
+      "$typeName": "exa.cascade_plugins_pb.CascadePluginCommandTemplate",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
+    "supabase-mcp-server": {
+      "$typeName": "exa.cascade_plugins_pb.CascadePluginCommandTemplate",
+      "command": "npx",
+      "args": [
+        "-y",
+        "--prefer-offline",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtempkdHVkbnRjbXZ5d3F2bnFoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjYzMDM3MiwiZXhwIjoyMDg4MjA2MzcyfQ.KLM-IDHI8YbgxXF4fwVtbouMi8dTqKU-5gj6L-x51FY"
+      ],
+      "env": {}
+    },
+    "magic": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--prefer-offline",
+        "@21st-dev/magic@latest"
+      ],
+      "env": {
+        "API_KEY": "117bc4fe6d5987e953f97492a912cefff3e720fe12962e82633f7977a26e8fdd"
+      }
+    },
+    "magicui": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--prefer-offline",
+        "@magicui/mcp@latest"
+      ],
+      "env": {}
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--prefer-offline",
+        "shadcn@mcp"
+      ],
+      "env": {}
+    },
+    "v0": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--prefer-offline",
+        "v0-mcp@latest"
+      ],
+      "env": {
+        "V0_API_KEY": "v1:ls0J5wMbq0Ru7y9Z7UjbLLSU:vcp_6Zac8dxdRux4xtjPR1pcKbAGo0s1UpNB0C4PuAr6khXYEgzXtp1krsOL"
+      }
+    }
+  }
+}
