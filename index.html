@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zvision Automation — Automatize. Escale. Domine.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════
+       TOKENS
+    ═══════════════════════════════════════ */
+    :root {
+      --surface-page:     #050506;
+      --surface-card:     #0d0d10;
+      --surface-elevated: #141418;
+      --surface-hover:    #1c1c22;
+      --text-primary:     #e8e8e8;
+      --text-secondary:   #9ca3af;
+      --text-muted:       #4b5563;
+      --accent-primary:   #A2E635;
+      --accent-hover:     #b8f040;
+      --accent-subtle:    rgba(162,230,53,0.08);
+      --accent-subtle2:   rgba(162,230,53,0.15);
+      --status-success:   #22c55e;
+      --status-error:     #ef4444;
+      --status-warning:   #f59e0b;
+      --border-default:   rgba(162,230,53,0.15);
+      --border-bright:    rgba(162,230,53,0.5);
+      --radius-card:      4px;
+      --radius-button:    3px;
+      --shadow-neon:      0 0 12px rgba(162,230,53,0.25);
+      --shadow-neon-sm:   0 0 6px rgba(162,230,53,0.3);
+    }
+
+    /* ═══════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      background: var(--surface-page);
+      color: var(--text-primary);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; font-family: inherit; }
+    input, textarea { font-family: inherit; }
+    img { max-width: 100%; display: block; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--surface-page); }
+    ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+
+    /* ═══════════════════════════════════════
+       KEYFRAMES
+    ═══════════════════════════════════════ */
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+    @keyframes logoGlow {
+      0%,100% { box-shadow: 0 0 20px rgba(162,230,53,0.3); }
+      50%      { box-shadow: 0 0 40px rgba(162,230,53,0.55), 0 0 60px rgba(162,230,53,0.15); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes terminalBlink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0; }
+    }
+    @keyframes scanline {
+      from { top: 100%; }
+      to   { top: -2px; }
+    }
+    @keyframes slideRight {
+      from { width: 0%; }
+      to   { width: var(--bar-w, 75%); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* ═══════════════════════════════════════
+       TACTICAL GRID (background)
+    ═══════════════════════════════════════ */
+    .tac-bg {
+      position: relative;
+    }
+    .tac-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(162,230,53,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(162,230,53,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .tac-bg > * { position: relative; z-index: 1; }
+
+    /* ═══════════════════════════════════════
+       FADE-UP (scroll reveal)
+    ═══════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-d1 { transition-delay: 0.1s; }
+    .reveal-d2 { transition-delay: 0.2s; }
+    .reveal-d3 { transition-delay: 0.3s; }
+    .reveal-d4 { transition-delay: 0.4s; }
+    .reveal-d5 { transition-delay: 0.5s; }
+    .reveal-d6 { transition-delay: 0.6s; }
+
+    /* ═══════════════════════════════════════
+       SHARED COMPONENTS
+    ═══════════════════════════════════════ */
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+    .card:hover {
+      border-color: rgba(162,230,53,0.3);
+    }
+    .card-hover:hover {
+      border-color: rgba(162,230,53,0.35);
+      transform: translateY(-2px);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-radius: var(--radius-button);
+      transition: all 0.2s ease;
+      border: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--accent-primary);
+      color: var(--surface-page);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: var(--shadow-neon);
+      transform: translateY(-1px);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-default);
+    }
+    .btn-outline:hover {
+      border-color: var(--border-bright);
+      color: var(--accent-primary);
+    }
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-radius: 2px;
+    }
+    .badge-accent {
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-default);
+      color: var(--accent-primary);
+    }
+    .badge-success {
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: var(--status-success);
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .live-dot-accent  { background: var(--accent-primary);  box-shadow: var(--shadow-neon-sm); }
+    .live-dot-success { background: var(--status-success);  box-shadow: 0 0 5px var(--status-success); }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--accent-primary);
+      opacity: 0.65;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .section-rule {
+      width: 36px; height: 2px;
+      background: var(--accent-primary);
+      margin-top: 12px;
+    }
+
+    /* Corner marks */
+    .corner-marks { position: relative; }
+    .corner-marks::before,
+    .corner-marks::after {
+      content: '';
+      position: absolute;
+      width: 10px; height: 10px;
+      border-color: rgba(162,230,53,0.3);
+      border-style: solid;
+    }
+    .corner-marks::before { top: 0; left: 0;  border-width: 1px 0 0 1px; }
+    .corner-marks::after  { top: 0; right: 0; border-width: 1px 1px 0 0; }
+
+    /* ═══════════════════════════════════════
+       TOPBAR
+    ═══════════════════════════════════════ */
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid transparent;
+      transition: background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+    }
+    #topbar.scrolled {
+      background: rgba(5,5,6,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-color: var(--border-default);
+    }
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar-logo-mark {
+      width: 28px; height: 28px;
+      background: var(--accent-primary);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      animation: logoGlow 3s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .topbar-logo-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+    }
+    .topbar-logo-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+    .topbar-nav {
+      display: none;
+      gap: 24px;
+    }
+    .topbar-nav a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+    .topbar-nav a:hover { color: var(--accent-primary); }
+
+    /* ACESSAR CRM outline button */
+    .btn-crm {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: var(--radius-button);
+      border: 1px solid rgba(162,230,53,0.4);
+      color: var(--text-secondary);
+      background: transparent;
+      white-space: nowrap;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+    .btn-crm:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+    .btn-crm svg { flex-shrink: 0; }
+
+    /* Topbar right cluster (CRM + primary CTA) */
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Hamburger button (mobile only) */
+    .topbar-burger {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .topbar-burger span {
+      display: block;
+      height: 1.5px;
+      background: var(--text-secondary);
+      border-radius: 1px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .topbar-burger[aria-expanded="true"] span:nth-child(1) {
+      transform: translateY(6.5px) rotate(45deg);
+    }
+    .topbar-burger[aria-expanded="true"] span:nth-child(2) {
+      opacity: 0;
+    }
+    .topbar-burger[aria-expanded="true"] span:nth-child(3) {
+      transform: translateY(-6.5px) rotate(-45deg);
+    }
+
+    /* Mobile nav drawer */
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: 52px;
+      left: 0; right: 0;
+      background: rgba(5,5,6,0.97);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-default);
+      z-index: 998;
+      padding: 20px 24px 28px;
+      flex-direction: column;
+      gap: 0;
+    }
+    .mobile-drawer.open { display: flex; }
+    .mobile-drawer a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-default);
+      transition: color 0.15s;
+    }
+    .mobile-drawer a:hover { color: var(--accent-primary); }
+    .mobile-drawer .drawer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .mobile-drawer .btn-crm,
+    .mobile-drawer .btn { justify-content: center; width: 100%; }
+
+    /* Mobile: hide diag CTA + CRM btn in topbar, show burger */
+    .topbar-diag { display: none; }
+    .topbar-crm-desktop { display: none; }
+    @media (min-width: 768px) {
+      .topbar-diag { display: inline-flex; }
+      .topbar-crm-desktop { display: inline-flex; }
+      .topbar-burger { display: none; }
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: HERO
+    ═══════════════════════════════════════ */
+    #hero {
+      min-height: 100vh;
+      padding: 120px 32px 80px;
+      display: flex;
+      align-items: center;
+    }
+    #hero::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(ellipse at top right, rgba(162,230,53,0.05) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .hero-content { max-width: 680px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent-primary);
+      margin-bottom: 24px;
+    }
+    .hero-headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(32px, 5vw, 64px);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+    .hero-headline em {
+      font-style: normal;
+      color: var(--accent-primary);
+    }
+    .hero-sub {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 36px;
+      max-width: 580px;
+    }
+    .hero-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-default);
+    }
+    .hero-stat { display: flex; flex-direction: column; gap: 2px; }
+    .hero-stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text-primary);
+    }
+    .hero-stat-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* Hero operations panel */
+    .hero-panel {
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      position: relative;
+    }
+    .hero-panel::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-primary) 0%, transparent 100%);
+    }
+    .panel-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-default);
+      background: var(--surface-elevated);
+    }
+    .panel-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent-primary);
+    }
+    .panel-body { padding: 16px 14px; }
+    .panel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(162,230,53,0.05);
+    }
+    .panel-row:last-child { border-bottom: none; }
+    .panel-row-name {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+    }
+    .panel-divider {
+      height: 1px;
+      background: var(--border-default);
+      margin: 10px 0;
+    }
+    .panel-metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+    .panel-metric-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+    }
+    .panel-metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+    .panel-bar-row { margin-top: 12px; }
+    .panel-bar-label {
+      display: flex; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .panel-bar-track {
+      height: 2px;
+      background: var(--surface-elevated);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .panel-bar-fill {
+      height: 100%;
+      background: var(--accent-primary);
+      border-radius: 1px;
+      width: 0;
+      transition: width 1.5s ease 0.5s;
+    }
+    .panel-cursor {
+      display: inline-block;
+      width: 6px; height: 11px;
+      background: var(--accent-primary);
+      animation: terminalBlink 1s infinite;
+      margin-left: 2px;
+      vertical-align: middle;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: PROBLEM
+    ═══════════════════════════════════════ */
+    #problema {
+      padding: 96px 32px;
+    }
+    .problem-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .problem-header { text-align: center; margin-bottom: 56px; }
+    .problem-headline {
+      font-weight: 700;
+      font-size: clamp(26px, 3.5vw, 42px);
+      line-height: 1.2;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .problem-sub {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-top: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+    }
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .problem-card {
+      padding: 22px 24px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .problem-icon {
+      width: 36px; height: 36px;
+      flex-shrink: 0;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .problem-card-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+      letter-spacing: 0.3px;
+    }
+    .problem-card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .problem-transition {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .problem-transition::before,
+    .problem-transition::after {
+      content: '';
+      height: 1px;
+      width: 60px;
+      background: var(--border-default);
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: SOLUTION
+    ═══════════════════════════════════════ */
+    #solucao {
+      padding: 96px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .solucao-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .solucao-headline {
+      font-weight: 700;
+      font-size: clamp(26px, 3.5vw, 42px);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .solucao-sub {
+      font-size: 16px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 32px;
+      max-width: 520px;
+    }
+    .solucao-list { display: flex; flex-direction: column; gap: 12px; }
+    .solucao-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+    }
+    .solucao-item-icon {
+      width: 32px; height: 32px;
+      flex-shrink: 0;
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .solucao-item-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent-primary);
+      margin-bottom: 3px;
+    }
+    .solucao-item-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Terminal card */
+    .terminal-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      position: relative;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+    .terminal-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-primary), transparent);
+    }
+    .terminal-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: var(--surface-elevated);
+      border-bottom: 1px solid var(--border-default);
+    }
+    .terminal-title {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent-primary);
+    }
+    .terminal-dots { display: flex; gap: 5px; }
+    .tdot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+    .terminal-body { padding: 16px 14px; }
+    .t-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(162,230,53,0.04);
+      font-size: 9px;
+    }
+    .t-row:last-child { border-bottom: none; }
+    .t-row-name {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+    .t-sep {
+      height: 1px;
+      background: var(--border-default);
+      margin: 10px 0;
+    }
+    .t-metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 9px;
+    }
+    .t-metric-k { color: var(--text-muted); letter-spacing: 1px; }
+    .t-metric-v { font-weight: 700; color: var(--accent-primary); }
+    .t-footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-default);
+      font-size: 8px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .t-progress { margin-top: 8px; }
+    .t-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .t-progress-track {
+      height: 2px;
+      background: var(--surface-elevated);
+      border-radius: 1px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+    .t-progress-fill {
+      height: 100%;
+      background: var(--accent-primary);
+      border-radius: 1px;
+      width: 0;
+      transition: width 1.5s ease;
+    }
+    .t-progress-fill.go { width: var(--w, 80%); }
+
+    /* ═══════════════════════════════════════
+       SECTION: PROCESS
+    ═══════════════════════════════════════ */
+    #processo {
+      padding: 96px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .processo-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .processo-header { text-align: center; margin-bottom: 64px; }
+    .processo-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      position: relative;
+    }
+    .processo-step {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .step-num-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+    .step-num {
+      width: 48px; height: 48px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+    .step-line {
+      width: 1px;
+      flex: 1;
+      min-height: 32px;
+      background: var(--border-default);
+      margin: 4px 0;
+    }
+    .step-content { padding-top: 10px; }
+    .step-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--accent-primary);
+      margin-bottom: 8px;
+    }
+    .step-title {
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .step-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      max-width: 520px;
+    }
+    .processo-note {
+      margin-top: 48px;
+      padding: 14px 18px;
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-default);
+      border-left: 3px solid var(--accent-primary);
+      border-radius: var(--radius-card);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: DELIVERABLES
+    ═══════════════════════════════════════ */
+    #entregaveis {
+      padding: 96px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .entregaveis-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .entregaveis-header { text-align: center; margin-bottom: 56px; }
+    .entregaveis-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .ent-card {
+      padding: 22px 24px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .ent-icon {
+      width: 40px; height: 40px;
+      flex-shrink: 0;
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ent-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent-primary);
+      margin-bottom: 4px;
+    }
+    .ent-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+    }
+    .ent-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: DIFFERENTIALS
+    ═══════════════════════════════════════ */
+    #diferenciais {
+      padding: 96px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .diferenciais-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .diferenciais-header { margin-bottom: 48px; }
+    .dif-primary {
+      padding: 32px;
+      margin-bottom: 12px;
+      border-left: 3px solid var(--accent-primary) !important;
+    }
+    .dif-primary-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--accent-primary);
+      margin-bottom: 10px;
+    }
+    .dif-primary-title {
+      font-weight: 700;
+      font-size: clamp(20px, 3vw, 28px);
+      color: var(--text-primary);
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+    .dif-primary-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      max-width: 580px;
+    }
+    .dif-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .dif-card { padding: 22px 24px; }
+    .dif-card-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent-primary);
+      margin-bottom: 8px;
+    }
+    .dif-card-title {
+      font-weight: 700;
+      font-size: 17px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .dif-card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: OBJECTIONS / FAQ
+    ═══════════════════════════════════════ */
+    #objecoes {
+      padding: 96px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .objecoes-inner {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .objecoes-header { text-align: center; margin-bottom: 48px; }
+    .accordion { display: flex; flex-direction: column; gap: 8px; }
+    .acc-item {
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .acc-item.open { border-color: rgba(162,230,53,0.35); }
+    .acc-trigger {
+      width: 100%;
+      padding: 18px 20px;
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .acc-trigger-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+    .acc-icon {
+      width: 20px; height: 20px;
+      flex-shrink: 0;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.25s, background 0.2s;
+    }
+    .acc-item.open .acc-icon {
+      transform: rotate(45deg);
+      background: var(--accent-subtle);
+      border-color: var(--border-bright);
+    }
+    .acc-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, padding 0.25s;
+    }
+    .acc-item.open .acc-body { max-height: 300px; }
+    .acc-body-inner {
+      padding: 0 20px 18px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      border-top: 1px solid var(--border-default);
+      padding-top: 14px;
+    }
+    .acc-body-inner span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: PRICING
+    ═══════════════════════════════════════ */
+    #investimento {
+      padding: 96px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .investimento-inner {
+      max-width: 560px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .pricing-card {
+      margin-top: 48px;
+      padding: 40px 36px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-card);
+      position: relative;
+      overflow: hidden;
+    }
+    .pricing-card::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    }
+    .pricing-retainer {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .pricing-range {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: clamp(28px, 5vw, 44px);
+      color: var(--accent-primary);
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .pricing-period {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .pricing-setup {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+    .pricing-divider {
+      height: 1px;
+      background: var(--border-default);
+      margin: 24px 0;
+    }
+    .pricing-includes-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      text-align: left;
+    }
+    .pricing-list { list-style: none; text-align: left; margin-bottom: 28px; }
+    .pricing-list li {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-secondary);
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(162,230,53,0.04);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 0.5px;
+    }
+    .pricing-list li::before {
+      content: '»';
+      color: var(--accent-primary);
+      flex-shrink: 0;
+    }
+    .pricing-list li:last-child { border-bottom: none; }
+    .pricing-badge {
+      margin-bottom: 20px;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION: CONTACT
+    ═══════════════════════════════════════ */
+    #contato {
+      padding: 96px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .contato-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+    .contato-headline {
+      font-weight: 700;
+      font-size: clamp(26px, 3.5vw, 44px);
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .contato-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      line-height: 1.7;
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--surface-page);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-card);
+      padding: 10px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px rgba(162,230,53,0.1);
+    }
+    .form-input::placeholder { color: var(--text-muted); }
+    textarea.form-input { resize: vertical; min-height: 100px; }
+    .form-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    .form-error {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--status-error);
+      margin-top: 4px;
+      display: none;
+    }
+    .form-input.error { border-color: var(--status-error); }
+    .form-success {
+      display: none;
+      padding: 16px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: var(--radius-card);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--status-success);
+      text-align: center;
+      letter-spacing: 1px;
+      line-height: 1.7;
+      margin-top: 14px;
+    }
+
+    .form-tx-error {
+      display: none;
+      padding: 14px 16px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-card);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--status-error);
+      text-align: center;
+      letter-spacing: 1px;
+      margin-top: 14px;
+    }
+
+    /* What happens next panel */
+    .next-steps {
+      padding: 28px;
+    }
+    .next-steps-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--accent-primary);
+      margin-bottom: 20px;
+    }
+    .next-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(162,230,53,0.05);
+    }
+    .next-step:last-child { border-bottom: none; }
+    .next-step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--accent-primary);
+      background: var(--accent-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: 2px;
+      padding: 3px 7px;
+      flex-shrink: 0;
+      letter-spacing: 1px;
+    }
+    .next-step-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      padding-top: 2px;
+    }
+    .next-step-text strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════ */
+    #footer {
+      padding: 48px 32px 32px;
+      border-top: 1px solid var(--border-default);
+    }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .footer-top {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .footer-brand { display: flex; flex-direction: column; gap: 8px; }
+    .footer-tagline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      font-style: italic;
+    }
+    .footer-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-nav a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+    .footer-nav a:hover { color: var(--accent-primary); }
+    .footer-bottom {
+      padding-top: 20px;
+      border-top: 1px solid var(--border-default);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .footer-copy {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+    .footer-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--status-success);
+      letter-spacing: 1px;
+    }
+
+    /* ═══════════════════════════════════════
+       SECTION SHARED LAYOUT
+    ═══════════════════════════════════════ */
+    .section-center { text-align: center; }
+    .section-center .section-rule { margin: 12px auto 0; }
+    .c-accent { color: var(--accent-primary); }
+    .section-rule-auto { margin: 12px auto 0; }
+    .section-title-lg-center { font-size: clamp(26px,3.5vw,40px); text-align: center; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE — 768px
+    ═══════════════════════════════════════ */
+    @media (min-width: 768px) {
+      #topbar { padding: 0 48px; }
+      .topbar-nav { display: flex; }
+
+      .hero-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 64px;
+      }
+
+      .problem-grid { grid-template-columns: 1fr 1fr; }
+
+      .solucao-inner { grid-template-columns: 1fr 1fr; }
+
+      .processo-steps {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0;
+      }
+      .processo-step {
+        flex: 1;
+        flex-direction: column;
+        gap: 0;
+        align-items: center;
+        text-align: center;
+      }
+      .step-num-wrap {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+      }
+      .step-line {
+        width: auto;
+        height: 1px;
+        min-height: unset;
+        flex: 1;
+        margin: 0;
+      }
+      .processo-step:last-child .step-line { display: none; }
+      .step-content { padding-top: 20px; text-align: center; }
+      .step-desc { margin: 0 auto; }
+
+      .entregaveis-grid { grid-template-columns: 1fr 1fr; }
+
+      .dif-grid { grid-template-columns: 1fr 1fr; }
+
+      .contato-inner { grid-template-columns: 1fr 1fr; }
+
+      .form-row { grid-template-columns: 1fr 1fr; }
+
+      .footer-top {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .footer-bottom {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       MOBILE-FIRST POLISH — max 639px
+    ═══════════════════════════════════════ */
+    @media (max-width: 639px) {
+      /* Prevent any element from breaking out */
+      body { overflow-x: hidden; }
+      img, svg, video, iframe { max-width: 100%; }
+
+      /* Hero: tighter padding, no panel on very small */
+      #hero { padding: 100px 20px 60px; }
+      .hero-inner { gap: 32px; }
+      .hero-content { max-width: 100%; }
+      .hero-headline { font-size: clamp(28px, 8vw, 40px); }
+      .hero-sub { font-size: 15px; }
+      .hero-ctas { flex-direction: column; }
+      .hero-ctas .btn { width: 100%; justify-content: center; }
+
+      /* Stats: 2×2 grid on mobile */
+      .hero-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 20px;
+      }
+
+      /* Sections padding */
+      #problema, #solucao, #processo, #entregaveis,
+      #diferenciais, #objecoes, #investimento,
+      #contato { padding-left: 20px; padding-right: 20px; }
+      #footer { padding-left: 20px; padding-right: 20px; }
+
+      /* Problem grid: 1 col */
+      .problem-grid { grid-template-columns: 1fr; }
+
+      /* Deliverables/diferenciais: 1 col */
+      .entregaveis-grid { grid-template-columns: 1fr; }
+      .dif-grid { grid-template-columns: 1fr; }
+
+      /* Contact form: full-width */
+      .contato-inner { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-input { width: 100%; }
+      .btn-full { width: 100%; }
+
+      /* Footer: column */
+      .footer-top { flex-direction: column; gap: 20px; }
+      .footer-nav { flex-direction: column; gap: 12px; }
+      .footer-bottom { flex-direction: column; gap: 8px; align-items: flex-start; }
+
+      /* Hero panel hides on very small to avoid overflow */
+      .hero-panel { display: none; }
+
+      /* Topbar padding */
+      #topbar { padding: 0 16px; }
+    }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE — 1280px
+    ═══════════════════════════════════════ */
+    @media (min-width: 1280px) {
+      #topbar { padding: 0 64px; }
+      #hero { padding: 140px 64px 100px; }
+      #problema, #solucao, #processo, #entregaveis,
+      #diferenciais, #objecoes, #investimento,
+      #contato, #footer { padding-left: 64px; padding-right: 64px; }
+
+      .entregaveis-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     TOPBAR
+══════════════════════════════════════ -->
+<header id="topbar">
+  <a href="#hero" class="topbar-logo" aria-label="Zvision Automation — início">
+    <div class="topbar-logo-mark" style="background:transparent;padding:0;border:none;animation:logoGlow 3s ease-in-out infinite;"><svg width="28" height="28" viewBox="0 0 2085 2085" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#A2E635"><path d="M753.37 1579.84 c-27.49 -20.16 -59.86 -44.18 -72.28 -53.35 -12.22 -9.16 -56.20 -41.13 -97.73 -71.26 -41.33 -29.93 -76.56 -56.20 -77.78 -58.03 -2.04 -2.44 -2.65 -32.58 -2.65 -133.98 l0 -130.72 37.26 -27.28 c20.36 -15.27 99.36 -73.10 175.51 -128.89 76.15 -55.79 167.37 -122.58 202.60 -148.64 35.23 -25.86 70.04 -51.11 77.17 -55.99 18.33 -12.22 43.98 -23.82 66.99 -30.13 l19.75 -5.50 153.73 -0.41 c146.19 -0.61 153.52 -0.41 149.04 3.05 -2.65 1.83 -15.88 12.22 -29.52 23.01 -13.64 10.59 -27.49 21.18 -30.95 23.42 -5.90 3.67 -24.64 17.71 -63.73 47.44 -10.18 7.94 -19.14 14.46 -19.75 14.46 -0.61 0 -10.18 7.33 -21.18 16.29 -11.20 8.96 -21.18 16.29 -21.99 16.29 -0.81 0 -8.14 5.29 -16.09 11.81 -7.94 6.31 -19.55 15.27 -26.06 19.75 -6.31 4.48 -26.88 19.55 -45.41 33.60 -44.79 33.80 -61.69 46.42 -80.02 59.86 -8.35 6.11 -23.42 17.51 -33.60 25.25 -9.98 7.74 -24.03 18.12 -30.75 23.01 -6.92 4.89 -18.94 13.64 -26.47 19.55 -7.74 5.90 -19.34 14.66 -25.86 19.34 -6.31 4.89 -17.31 13.03 -24.43 18.33 -6.92 5.29 -15.88 12.01 -19.75 14.86 -3.87 3.05 -19.55 14.66 -34.61 26.06 -15.07 11.40 -28.91 21.79 -30.75 22.80 -4.07 2.44 -24.23 17.51 -47.65 35.63 -9.37 7.33 -20.36 15.47 -24.43 18.33 -4.07 2.85 -17.92 13.44 -31.15 23.42 -13.03 10.18 -28.51 21.58 -34.21 25.45 -8.55 5.90 -37.26 27.08 -78.59 58.44 -4.28 3.05 -11.20 8.14 -15.27 11.40 -4.28 3.05 -15.07 11.40 -24.23 18.33 -8.96 6.92 -21.58 16.09 -27.90 20.36 -6.31 4.28 -12.01 8.55 -12.62 9.57 -0.81 1.43 120.95 2.04 346.55 2.04 227.64 0 352.25 0.81 361.01 2.04 38.28 6.11 75.95 26.06 100.79 53.35 23.21 25.66 37.87 57.01 55.99 119.32 6.72 23.01 12.22 42.56 12.22 43.37 0 1.02 -130.72 1.83 -290.56 1.83 l-290.76 -0.20 -49.89 -36.65z"/><path d="M699.41 1345.88 c1.22 -1.83 82.26 -62.92 266.73 -200.56 40.32 -30.13 127.87 -95.49 194.45 -145.38 66.58 -49.68 151.90 -113.41 189.36 -141.31 37.46 -28.10 104.25 -77.98 148.43 -111.17 l80.43 -60.27 -357.34 -1.02 c-403.36 -1.22 -363.86 0.61 -401.93 -18.12 -43.17 -21.38 -72.08 -55.18 -90.81 -106.08 -10.79 -29.93 -28.10 -92.44 -26.06 -94.68 1.43 -1.43 100.99 -2.24 288.72 -2.65 l286.69 -0.61 58.84 43.17 c68.01 50.09 148.03 108.32 203.61 148.84 l38.89 28.10 1.43 19.14 c0.61 10.59 1.22 70.25 1.22 132.76 l-0.20 113.41 -5.90 5.50 c-3.46 3.26 -10.38 8.55 -15.68 12.01 -5.29 3.46 -15.47 11 -22.80 16.49 -7.33 5.70 -25.66 19.34 -40.32 30.13 -14.86 10.79 -29.32 21.58 -32.37 23.82 -3.05 2.24 -7.53 5.50 -10.18 7.13 -2.44 1.63 -8.55 6.11 -13.44 9.77 -4.89 3.67 -17.92 13.44 -29.12 21.79 -11.20 8.35 -23.62 17.51 -27.49 20.36 -3.87 3.05 -16.09 12.01 -26.88 19.95 -10.79 8.14 -22.19 16.49 -25.25 18.73 -2.85 2.24 -7.53 5.50 -9.98 7.13 -2.65 1.63 -13.44 9.77 -24.23 17.92 -10.59 7.94 -19.95 14.66 -20.77 14.66 -0.61 0 -8.14 5.50 -16.70 12.42 -8.35 6.72 -17.71 13.85 -20.56 15.68 -2.85 1.83 -9.37 6.52 -14.46 10.59 -5.09 4.07 -11.40 8.76 -14.25 10.59 -2.85 1.83 -9.98 6.92 -15.68 11.20 -5.90 4.28 -19.55 14.25 -30.34 21.99 -10.79 7.94 -26.27 19.55 -34.41 26.06 -8.14 6.31 -15.47 11.61 -16.29 11.61 -0.81 0 -5.09 3.26 -9.77 7.13 -4.48 3.87 -9.16 7.13 -10.18 7.13 -1.02 0 -6.52 3.26 -12.01 7.33 -12.22 8.55 -39.30 20.16 -61.69 25.86 -15.68 4.07 -22.40 4.28 -169.61 4.89 -106.49 0.61 -153.12 0.20 -152.10 -1.43z"/></g></svg></div>
+    <div>
+      <div class="topbar-logo-name">ZVISION</div>
+      <div class="topbar-logo-sub">AUTOMATION</div>
+    </div>
+  </a>
+
+  <nav class="topbar-nav" aria-label="Navegação principal">
+    <a href="#processo">Como Funciona</a>
+    <a href="#entregaveis">Entregáveis</a>
+    <a href="#investimento">Investimento</a>
+    <a href="#contato">Contato</a>
+  </nav>
+
+  <div class="topbar-actions">
+    <a href="https://zvision-crm.vercel.app/auth/login" target="_blank" rel="noopener noreferrer" class="btn-crm topbar-crm-desktop" aria-label="Acessar CRM">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      ACESSAR CRM
+    </a>
+    <a href="#contato" class="btn btn-primary topbar-diag" aria-label="Solicitar diagnóstico gratuito">
+      SOLICITAR DIAGNÓSTICO
+    </a>
+    <button class="topbar-burger" id="burger-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-drawer">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile navigation drawer -->
+<div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-label="Menu de navegação">
+  <a href="#processo" class="drawer-link">Como Funciona</a>
+  <a href="#entregaveis" class="drawer-link">Entregáveis</a>
+  <a href="#investimento" class="drawer-link">Investimento</a>
+  <a href="#contato" class="drawer-link">Contato</a>
+  <div class="drawer-actions">
+    <a href="https://zvision-crm.vercel.app/auth/login" target="_blank" rel="noopener noreferrer" class="btn-crm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      ACESSAR CRM
+    </a>
+    <a href="#contato" class="btn btn-primary drawer-link" style="justify-content:center;">SOLICITAR DIAGNÓSTICO</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
+<section id="hero" class="tac-bg">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge reveal">
+        <div class="live-dot live-dot-accent" aria-hidden="true"></div>
+        // AUTOMAÇÃO DE PROCESSOS COM IA
+      </div>
+
+      <h1 class="hero-headline reveal reveal-d1">
+        Sua operação não precisa de<br>
+        mais gente. Precisa de
+        <em>inteligência.</em>
+      </h1>
+
+      <p class="hero-sub reveal reveal-d2">
+        A Zvision mapeia, implementa e gerencia automações com IA que eliminam trabalho manual, reduzem custo operacional e escalam sua operação sem aumentar headcount.
+      </p>
+
+      <div class="hero-ctas reveal reveal-d3">
+        <a href="#contato" class="btn btn-primary">
+          SOLICITAR DIAGNÓSTICO GRATUITO
+        </a>
+        <a href="#processo" class="btn btn-outline">
+          VER COMO FUNCIONA
+        </a>
+      </div>
+
+      <div class="hero-stats reveal reveal-d4">
+        <div class="hero-stat">
+          <span class="hero-stat-val">48h</span>
+          <span class="hero-stat-lbl">// Diagnóstico respondido</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-val">100%</span>
+          <span class="hero-stat-lbl">// Operação gerenciada por nós</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-val">0</span>
+          <span class="hero-stat-lbl">// Equipe técnica interna necessária</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-panel reveal reveal-d2" aria-hidden="true">
+      <div class="panel-topbar">
+        <span class="panel-title">// OPERAÇÕES ATIVAS</span>
+        <div class="live-dot live-dot-accent"></div>
+      </div>
+      <div class="panel-body">
+        <div class="panel-row">
+          <div class="panel-row-name">
+            <div class="live-dot live-dot-success"></div>
+            ATENDIMENTO AUTO
+          </div>
+          <span class="badge badge-success"><span class="live-dot live-dot-success"></span>ATIVO</span>
+        </div>
+        <div class="panel-row">
+          <div class="panel-row-name">
+            <div class="live-dot live-dot-success"></div>
+            CRM INTEGRADO
+          </div>
+          <span class="badge badge-success"><span class="live-dot live-dot-success"></span>LIVE</span>
+        </div>
+        <div class="panel-row">
+          <div class="panel-row-name">
+            <div class="live-dot live-dot-success"></div>
+            RELATÓRIOS EM TEMPO REAL
+          </div>
+          <span class="badge badge-success"><span class="live-dot live-dot-success"></span>SYNC</span>
+        </div>
+        <div class="panel-row">
+          <div class="panel-row-name">
+            <div class="live-dot live-dot-success"></div>
+            INTEGRAÇÃO API ATIVA
+          </div>
+          <span class="badge badge-success"><span class="live-dot live-dot-success"></span>SYNC</span>
+        </div>
+        <div class="panel-divider"></div>
+        <div class="panel-metric">
+          <span class="panel-metric-lbl">HORAS ECONOMIZADAS / MÊS</span>
+          <span class="panel-metric-val">800h+</span>
+        </div>
+        <div class="panel-metric">
+          <span class="panel-metric-lbl">CUSTO OPERACIONAL</span>
+          <span class="panel-metric-val">até -65%</span>
+        </div>
+        <div class="panel-bar-row">
+          <div class="panel-bar-label">
+            <span>EFICIÊNCIA DA OPERAÇÃO</span>
+            <span style="color:var(--accent-primary);font-weight:700;">+90%</span>
+          </div>
+          <div class="panel-bar-track">
+            <div class="panel-bar-fill" style="--w:90%;"></div>
+          </div>
+        </div>
+        <div class="panel-bar-row">
+          <div class="panel-bar-label">
+            <span>PROCESSOS AUTOMATIZADOS</span>
+            <span style="color:var(--accent-primary);font-weight:700;">12 / 14</span>
+          </div>
+          <div class="panel-bar-track">
+            <div class="panel-bar-fill" style="--w:86%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PROBLEMA
+══════════════════════════════════════ -->
+<section id="problema" class="tac-bg">
+  <div class="problem-inner">
+    <div class="problem-header">
+      <div class="section-label reveal">// DIAGNÓSTICO</div>
+      <h2 class="section-title problem-headline reveal reveal-d1">
+        Se isso ainda é manual na sua operação,<br>
+        você está pagando um preço invisível.
+      </h2>
+      <p class="problem-sub reveal reveal-d2">PROCESSOS INEFICIENTES NÃO APARECEM NO BALANÇO — MAS CONSOMEM SUA MARGEM.</p>
+    </div>
+
+    <div class="problem-grid">
+      <div class="card problem-card reveal reveal-d1">
+        <div class="problem-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="color:var(--text-muted)">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div>
+          <div class="problem-card-title">Horas da equipe consumidas por tarefas repetitivas</div>
+          <div class="problem-card-desc">Seu time passa horas copiando dados, respondendo manualmente e gerando relatórios que poderiam ser automáticos. Isso é custo invisível de headcount.</div>
+        </div>
+      </div>
+
+      <div class="card problem-card reveal reveal-d2">
+        <div class="problem-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="color:var(--text-muted)">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <div class="problem-card-title">Retrabalho gerado por erros humanos</div>
+          <div class="problem-card-desc">Processos manuais são processos com falha previsível. Um dado errado, um e-mail fora de hora ou uma etapa esquecida corrói a confiança do cliente e o resultado do mês.</div>
+        </div>
+      </div>
+
+      <div class="card problem-card reveal reveal-d3">
+        <div class="problem-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="color:var(--text-muted)">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="problem-card-title">Escala travada por dependência de pessoas</div>
+          <div class="problem-card-desc">Toda vez que o volume aumenta, você precisa contratar. A operação não escala — ela cresce linearmente com custo, travando sua margem antes de travar seu crescimento.</div>
+        </div>
+      </div>
+
+      <div class="card problem-card reveal reveal-d4">
+        <div class="problem-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="color:var(--text-muted)">
+            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="problem-card-title">Custo operacional crescendo mais rápido que a receita</div>
+          <div class="problem-card-desc">Enquanto os processos são manuais, a única forma de crescer é gastar mais. A Zvision inverte essa equação: mais resultado com a mesma — ou menor — estrutura operacional.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="problem-transition reveal">
+      A Zvision existe para encerrar esse ciclo
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SOLUÇÃO
+══════════════════════════════════════ -->
+<section id="solucao" class="tac-bg">
+  <div class="solucao-inner">
+    <div>
+      <div class="section-label reveal">// ZVISION AUTOMATION</div>
+      <h2 class="section-title solucao-headline reveal reveal-d1">
+        Não entregamos ferramentas.<br>Entregamos operações funcionando.
+      </h2>
+      <p class="solucao-sub reveal reveal-d2">
+        A Zvision mapeia seus processos internos, identifica onde a IA gera mais resultado e implementa as automações — depois fica gerenciando. Você não precisa de equipe técnica. Você só precisa de resultado.
+      </p>
+
+      <div class="solucao-list reveal reveal-d3">
+        <div class="card solucao-item">
+          <div class="solucao-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="solucao-item-label">AUTOMAÇÃO DE ATENDIMENTO</div>
+            <div class="solucao-item-desc">Chatbots e IA conversacional que respondem, qualificam e encaminham — sem intervenção humana para cada mensagem.</div>
+          </div>
+        </div>
+        <div class="card solucao-item">
+          <div class="solucao-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div>
+            <div class="solucao-item-label">FUNIL DE VENDAS E CRM</div>
+            <div class="solucao-item-desc">Pipeline automatizado que avança leads, gera follow-ups e sincroniza dados — sem depender de memória do vendedor.</div>
+          </div>
+        </div>
+        <div class="card solucao-item">
+          <div class="solucao-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <div>
+            <div class="solucao-item-label">INTEGRAÇÃO DE SISTEMAS E APIS</div>
+            <div class="solucao-item-desc">Seus sistemas conversando entre si. Dados que hoje exigem importação manual passam a fluir automaticamente entre plataformas.</div>
+          </div>
+        </div>
+        <div class="card solucao-item">
+          <div class="solucao-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+            </svg>
+          </div>
+          <div>
+            <div class="solucao-item-label">DASHBOARDS E RELATÓRIOS AUTOMATIZADOS</div>
+            <div class="solucao-item-desc">Visibilidade total da operação em tempo real. Relatórios que antes levavam horas para montar chegam prontos, todo dia, no horário certo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal-card reveal reveal-d2" aria-hidden="true">
+      <div class="terminal-topbar">
+        <span class="terminal-title">// MISSÃO EM EXECUÇÃO</span>
+        <div class="terminal-dots">
+          <div class="tdot" style="background:var(--status-error);opacity:0.7;"></div>
+          <div class="tdot" style="background:var(--status-warning);opacity:0.7;"></div>
+          <div class="tdot" style="background:var(--status-success);opacity:0.7;"></div>
+        </div>
+      </div>
+      <div class="terminal-body">
+        <div class="t-row">
+          <div class="t-row-name"><div class="live-dot live-dot-success"></div>ATENDIMENTO // ATIVO</div>
+          <span class="badge badge-success">OPERANDO</span>
+        </div>
+        <div class="t-row">
+          <div class="t-row-name"><div class="live-dot live-dot-success"></div>CRM // SINCRONIZADO</div>
+          <span class="badge badge-success">LIVE</span>
+        </div>
+        <div class="t-row">
+          <div class="t-row-name"><div class="live-dot live-dot-success"></div>RELATÓRIOS // GERADOS</div>
+          <span class="badge badge-success">AUTO</span>
+        </div>
+        <div class="t-row">
+          <div class="t-row-name"><div class="live-dot live-dot-success"></div>APIs // ATIVA</div>
+          <span class="badge badge-success">SYNC</span>
+        </div>
+        <div class="t-sep"></div>
+        <div class="t-metric">
+          <span class="t-metric-k">HORAS SALVAS / MÊS</span>
+          <span class="t-metric-v">800h+</span>
+        </div>
+        <div class="t-metric">
+          <span class="t-metric-k">CUSTO REDUZIDO</span>
+          <span class="t-metric-v">até -65%</span>
+        </div>
+        <div class="t-metric">
+          <span class="t-metric-k">UPTIME</span>
+          <span class="t-metric-v">99.9%</span>
+        </div>
+        <div class="t-sep"></div>
+        <div class="t-progress">
+          <div class="t-progress-label"><span>ATENDIMENTO AUTO</span><span class="c-accent">+90%</span></div>
+          <div class="t-progress-track"><div class="t-progress-fill" style="--w:90%;"></div></div>
+        </div>
+        <div class="t-progress">
+          <div class="t-progress-label"><span>PIPELINE CRM</span><span class="c-accent">+85%</span></div>
+          <div class="t-progress-track"><div class="t-progress-fill" style="--w:85%;"></div></div>
+        </div>
+        <div class="t-footer">
+          <div class="live-dot live-dot-accent"></div>
+          OPERADOR_ZVISION // GERENCIANDO ATIVAMENTE
+          <span class="panel-cursor"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     PROCESSO
+══════════════════════════════════════ -->
+<section id="processo" class="tac-bg">
+  <div class="processo-inner">
+    <div class="processo-header">
+      <div class="section-label reveal section-center">// COMO FUNCIONA</div>
+      <h2 class="section-title section-title-lg-center reveal reveal-d1">
+        Três etapas. Resultado mensurável.
+      </h2>
+      <div class="section-rule section-rule-auto reveal reveal-d1"></div>
+    </div>
+
+    <div class="processo-steps">
+      <div class="processo-step reveal reveal-d1">
+        <div class="step-num-wrap">
+          <div class="step-num">01</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-label">DIAGNÓSTICO</div>
+          <div class="step-title">Mapeamos sua operação</div>
+          <div class="step-desc">Auditoria dos processos internos elegíveis para automação. Identificamos onde a IA gera mais retorno e priorizamos por impacto.</div>
+        </div>
+      </div>
+
+      <div class="processo-step reveal reveal-d2">
+        <div class="step-num-wrap">
+          <div class="step-num">02</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-label">IMPLEMENTAÇÃO</div>
+          <div class="step-title">Construímos e integramos</div>
+          <div class="step-desc">As automações são construídas sob medida e integradas ao fluxo existente da empresa — sem causar ruptura na operação atual.</div>
+        </div>
+      </div>
+
+      <div class="processo-step reveal reveal-d3">
+        <div class="step-num-wrap">
+          <div class="step-num">03</div>
+        </div>
+        <div class="step-content">
+          <div class="step-label">OPERAÇÃO CONTÍNUA</div>
+          <div class="step-title">Gerenciamos e evoluímos</div>
+          <div class="step-desc">A Zvision monitora, mantém e evolui o sistema continuamente. Você não precisa de equipe técnica — o resultado é responsabilidade nossa.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="processo-note reveal reveal-d3">
+      <strong style="color:var(--accent-primary);font-family:'JetBrains Mono',monospace;font-size:10px;">// COMBO</strong>&nbsp;
+      Implementação + suporte mensal contínuo. Você não precisa de equipe técnica interna. Não entregamos e sumimos — ficamos operando junto com você.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     ENTREGÁVEIS
+══════════════════════════════════════ -->
+<section id="entregaveis" class="tac-bg">
+  <div class="entregaveis-inner">
+    <div class="entregaveis-header">
+      <div class="section-label reveal section-center">// O QUE VOCÊ RECEBE</div>
+      <h2 class="section-title section-title-lg-center reveal reveal-d1">
+        Cada entregável com resultado mensurável.
+      </h2>
+      <div class="section-rule section-rule-auto reveal reveal-d1"></div>
+    </div>
+
+    <div class="entregaveis-grid">
+      <div class="card ent-card card-hover corner-marks reveal reveal-d1">
+        <div class="ent-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+        <div>
+          <div class="ent-label">ENTREGÁVEL 01</div>
+          <div class="ent-title">Diagnóstico e Mapeamento de Processos</div>
+          <div class="ent-desc">Auditoria completa dos processos internos. Você recebe um relatório priorizando o que automatizar por maior retorno.</div>
+        </div>
+      </div>
+
+      <div class="card ent-card card-hover reveal reveal-d2">
+        <div class="ent-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="ent-label">ENTREGÁVEL 02</div>
+          <div class="ent-title">Automação de Atendimento</div>
+          <div class="ent-desc">Chatbots e IA conversacional para triagem, qualificação e resposta automática — integrados aos seus canais existentes.</div>
+        </div>
+      </div>
+
+      <div class="card ent-card card-hover corner-marks reveal reveal-d3">
+        <div class="ent-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <div>
+          <div class="ent-label">ENTREGÁVEL 03</div>
+          <div class="ent-title">Automação de Funil e CRM</div>
+          <div class="ent-desc">Pipeline de vendas automatizado com avanço de etapas, follow-ups inteligentes e sincronização de dados em tempo real.</div>
+        </div>
+      </div>
+
+      <div class="card ent-card card-hover reveal reveal-d4">
+        <div class="ent-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </div>
+        <div>
+          <div class="ent-label">ENTREGÁVEL 04</div>
+          <div class="ent-title">Integração entre Sistemas e APIs</div>
+          <div class="ent-desc">Seus sistemas passam a se comunicar automaticamente. Elimina importações manuais, duplicidade de dados e erros de sincronização.</div>
+        </div>
+      </div>
+
+      <div class="card ent-card card-hover reveal reveal-d5">
+        <div class="ent-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="ent-label">ENTREGÁVEL 05</div>
+          <div class="ent-title">Dashboards e Relatórios Automatizados</div>
+          <div class="ent-desc">Visibilidade total da operação em tempo real. Relatórios gerados e entregues automaticamente — sem trabalho manual da equipe.</div>
+        </div>
+      </div>
+
+      <div class="card ent-card card-hover corner-marks reveal reveal-d6">
+        <div class="ent-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="c-accent">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="ent-label">ENTREGÁVEL 06</div>
+          <div class="ent-title">Suporte Mensal e Gestão Contínua</div>
+          <div class="ent-desc">A Zvision fica operando junto com você. Monitoramos, corrigimos, evoluímos e expandimos as automações mensalmente.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     DIFERENCIAIS
+══════════════════════════════════════ -->
+<section id="diferenciais" class="tac-bg">
+  <div class="diferenciais-inner">
+    <div class="diferenciais-header">
+      <div class="section-label reveal">// POR QUE A ZVISION</div>
+      <h2 class="section-title reveal reveal-d1" style="font-size:clamp(26px,3.5vw,40px);">
+        O que nos separa de qualquer<br>outra agência de automação.
+      </h2>
+      <div class="section-rule reveal reveal-d1"></div>
+    </div>
+
+    <div class="card dif-primary reveal reveal-d2">
+      <div class="dif-primary-label">// DIFERENCIAL PRINCIPAL</div>
+      <div class="dif-primary-title">Entendemos de negócio,<br>não só de tecnologia.</div>
+      <div class="dif-primary-desc">A maioria das agências entrega a ferramenta e vai embora. A Zvision entende o processo, entende o resultado esperado e constrói a automação para gerar esse resultado — não para "funcionar". Somos a diferença entre uma automação que opera e uma automação que entrega.</div>
+    </div>
+
+    <div class="dif-grid">
+      <div class="card dif-card reveal reveal-d1">
+        <div class="dif-card-label">// DIFERENCIAL 02</div>
+        <div class="dif-card-title">Combo: implementamos e ficamos gerenciando.</div>
+        <div class="dif-card-desc">Você não precisa contratar um técnico interno, aprender a usar a ferramenta ou se preocupar com manutenção. A Zvision entrega e continua operando.</div>
+      </div>
+
+      <div class="card dif-card reveal reveal-d2">
+        <div class="dif-card-label">// DIFERENCIAL 03</div>
+        <div class="dif-card-title">IA onde outros ainda usam mão de obra.</div>
+        <div class="dif-card-desc">Enquanto concorrentes entregam automações de workflow básico, a Zvision usa IA para processos que antes exigiam julgamento humano.</div>
+      </div>
+
+      <div class="card dif-card reveal reveal-d3">
+        <div class="dif-card-label">// DIFERENCIAL 04</div>
+        <div class="dif-card-title">Velocidade de entrega real.</div>
+        <div class="dif-card-desc">Agências tradicionais de tecnologia levam meses. A Zvision opera com diagnóstico em 48h e primeira automação em produção em semanas, não trimestres.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     OBJEÇÕES
+══════════════════════════════════════ -->
+<section id="objecoes" class="tac-bg">
+  <div class="objecoes-inner">
+    <div class="objecoes-header">
+      <div class="section-label reveal section-center">// DÚVIDAS FREQUENTES</div>
+      <h2 class="section-title reveal reveal-d1" style="font-size:clamp(22px,3vw,34px);text-align:center;">
+        Respostas diretas para as perguntas que importam.
+      </h2>
+      <div class="section-rule section-rule-auto reveal reveal-d1"></div>
+    </div>
+
+    <div class="accordion reveal reveal-d2">
+      <div class="acc-item">
+        <button type="button" class="acc-trigger" aria-expanded="false">
+          <span class="acc-trigger-text">"Meu processo é muito específico para ser automatizado."</span>
+          <div class="acc-icon" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <line x1="5" y1="1" x2="5" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </button>
+        <div class="acc-body" role="region">
+          <div class="acc-body-inner">
+            <span>MAPEAMOS PRIMEIRO.</span> Toda automação começa com diagnóstico — não com código. Identificamos exatamente o que faz sentido automatizar dentro da sua operação específica. Se algo não tiver viabilidade técnica ou retorno justificável, dizemos antes de começar. Processos específicos são exatamente os que mais se beneficiam de automação sob medida.
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button type="button" class="acc-trigger" aria-expanded="false">
+          <span class="acc-trigger-text">"Já tentei ferramentas de automação e não funcionou."</span>
+          <div class="acc-icon" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <line x1="5" y1="1" x2="5" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </button>
+        <div class="acc-body" role="region">
+          <div class="acc-body-inner">
+            <span>A DIFERENÇA É O GERENCIAMENTO CONTÍNUO.</span> Ferramentas entregues sem suporte falham porque a operação muda, as integrações quebram e ninguém está presente para corrigir. A Zvision não entrega e some — ficamos monitorando, mantendo e evoluindo. O sistema que funciona hoje vai continuar funcionando em 6 meses porque estamos operando ele junto com você.
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button type="button" class="acc-trigger" aria-expanded="false">
+          <span class="acc-trigger-text">"Minha equipe não vai conseguir usar."</span>
+          <div class="acc-icon" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <line x1="5" y1="1" x2="5" y2="9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="1" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </button>
+        <div class="acc-body" role="region">
+          <div class="acc-body-inner">
+            <span>AS AUTOMAÇÕES RODAM NOS BASTIDORES.</span> Sua equipe não precisa aprender nada novo, mudar como trabalha ou interagir com nenhum sistema adicional. As automações operam de forma invisível — os resultados aparecem, o processo desaparece. O objetivo é exatamente o oposto de criar mais trabalho: é eliminar o que já existe.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     INVESTIMENTO
+══════════════════════════════════════ -->
+<section id="investimento" class="tac-bg">
+  <div class="investimento-inner">
+    <div class="section-label reveal section-center">// INVESTIMENTO</div>
+    <h2 class="section-title section-title-lg-center reveal reveal-d1">
+      Preço proporcional ao resultado.
+    </h2>
+    <div class="section-rule section-rule-auto reveal reveal-d1"></div>
+
+    <div class="pricing-card reveal reveal-d2">
+      <div class="pricing-retainer">RETAINER MENSAL</div>
+      <div class="pricing-range">R$500 – R$2.000</div>
+      <div class="pricing-period">por mês</div>
+      <div class="pricing-setup">+ Setup inicial sob consulta de escopo</div>
+
+      <div class="pricing-badge">
+        <span class="badge badge-accent">
+          <span class="live-dot live-dot-accent"></span>
+          // COMBO: IMPLEMENTAÇÃO + GESTÃO CONTÍNUA
+        </span>
+      </div>
+
+      <div class="pricing-divider"></div>
+
+      <div class="pricing-includes-title">// O QUE ESTÁ INCLUSO</div>
+      <ul class="pricing-list">
+        <li>Diagnóstico e mapeamento de processos</li>
+        <li>Implementação das automações acordadas</li>
+        <li>Automação de atendimento com IA conversacional</li>
+        <li>Integração de sistemas e APIs</li>
+        <li>Dashboards e relatórios automatizados</li>
+        <li>Suporte mensal e gestão ativa das automações</li>
+        <li>Monitoramento contínuo e evolução do sistema</li>
+      </ul>
+
+      <a href="#contato" class="btn btn-primary btn-full" style="font-size:12px;padding:14px 22px;">
+        SOLICITAR DIAGNÓSTICO GRATUITO
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     CONTATO
+══════════════════════════════════════ -->
+<section id="contato" class="tac-bg">
+  <div class="contato-inner">
+    <div>
+      <div class="section-label reveal">// INICIAR MISSÃO</div>
+      <h2 class="section-title contato-headline reveal reveal-d1">
+        Sua operação pode ser diferente em 30 dias.
+      </h2>
+      <p class="contato-sub reveal reveal-d2">
+        DIAGNÓSTICO GRATUITO. SEM COMPROMISSO.<br>RESPOSTA EM ATÉ 48H.
+      </p>
+
+      <form id="contact-form" novalidate style="margin-top:32px;">
+        <div class="form-row reveal reveal-d2">
+          <div class="form-group">
+            <label class="form-label" for="f-nome">Nome</label>
+            <input class="form-input" type="text" id="f-nome" name="nome" placeholder="Seu nome" required autocomplete="name">
+            <div class="form-error" id="e-nome">// Campo obrigatório</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-email">E-mail</label>
+            <input class="form-input" type="email" id="f-email" name="email" placeholder="seu@email.com" required autocomplete="email">
+            <div class="form-error" id="e-email">// E-mail inválido</div>
+          </div>
+        </div>
+        <div class="form-group reveal reveal-d3">
+          <label class="form-label" for="f-empresa">Empresa</label>
+          <input class="form-input" type="text" id="f-empresa" name="empresa" placeholder="Nome da empresa" autocomplete="organization">
+        </div>
+        <div class="form-group reveal reveal-d3">
+          <label class="form-label" for="f-msg">Mensagem (opcional)</label>
+          <textarea class="form-input" id="f-msg" name="mensagem" placeholder="// Descreva brevemente o processo que mais consome tempo da sua equipe..."></textarea>
+        </div>
+        <div class="reveal reveal-d4">
+          <button type="submit" class="btn btn-primary btn-full" style="font-size:12px;padding:14px 22px;">
+            INICIAR MISSÃO
+          </button>
+        </div>
+        <div class="form-success" id="form-success">
+          [OK] MISSÃO INICIADA<br>
+          Nossa equipe analisa sua operação em até 48h.<br>
+          SECURE_LINK_ESTABLISHED // AGUARDE CONTATO.
+        </div>
+        <div class="form-tx-error" id="form-error">
+          // FALHA NA TRANSMISSÃO — TENTE NOVAMENTE
+        </div>
+      </form>
+    </div>
+
+    <div class="card next-steps reveal reveal-d2">
+      <div class="next-steps-title">// O QUE ACONTECE DEPOIS</div>
+
+      <div class="next-step">
+        <span class="next-step-num">[01]</span>
+        <div class="next-step-text">
+          <strong>Você preenche o formulário.</strong> Leva menos de 2 minutos. Quanto mais contexto você der, mais preciso será o diagnóstico.
+        </div>
+      </div>
+
+      <div class="next-step">
+        <span class="next-step-num">[02]</span>
+        <div class="next-step-text">
+          <strong>Nossa equipe analisa sua operação em até 48h.</strong> Mapeamos os processos descritos e identificamos onde a automação gera mais resultado para o seu modelo de negócio.
+        </div>
+      </div>
+
+      <div class="next-step">
+        <span class="next-step-num">[03]</span>
+        <div class="next-step-text">
+          <strong>Você recebe um diagnóstico personalizado.</strong> Sem custo, sem compromisso. Um relatório com o que automatizar, o que esperar de retorno e como a Zvision operaria junto com você.
+        </div>
+      </div>
+
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-default);display:flex;align-items:center;gap:8px;">
+        <div class="live-dot live-dot-success"></div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--status-success);letter-spacing:1px;">DIAGNÓSTICO GRATUITO // SEM COMPROMISSO</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     FOOTER
+══════════════════════════════════════ -->
+<footer id="footer" class="tac-bg">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="topbar-logo" style="gap:10px;">
+          <div class="topbar-logo-mark" style="background:transparent;padding:0;border:none;width:24px;height:24px;animation:logoGlow 3s ease-in-out infinite;"><svg width="24" height="24" viewBox="0 0 2085 2085" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="#A2E635"><path d="M753.37 1579.84 c-27.49 -20.16 -59.86 -44.18 -72.28 -53.35 -12.22 -9.16 -56.20 -41.13 -97.73 -71.26 -41.33 -29.93 -76.56 -56.20 -77.78 -58.03 -2.04 -2.44 -2.65 -32.58 -2.65 -133.98 l0 -130.72 37.26 -27.28 c20.36 -15.27 99.36 -73.10 175.51 -128.89 76.15 -55.79 167.37 -122.58 202.60 -148.64 35.23 -25.86 70.04 -51.11 77.17 -55.99 18.33 -12.22 43.98 -23.82 66.99 -30.13 l19.75 -5.50 153.73 -0.41 c146.19 -0.61 153.52 -0.41 149.04 3.05 -2.65 1.83 -15.88 12.22 -29.52 23.01 -13.64 10.59 -27.49 21.18 -30.95 23.42 -5.90 3.67 -24.64 17.71 -63.73 47.44 -10.18 7.94 -19.14 14.46 -19.75 14.46 -0.61 0 -10.18 7.33 -21.18 16.29 -11.20 8.96 -21.18 16.29 -21.99 16.29 -0.81 0 -8.14 5.29 -16.09 11.81 -7.94 6.31 -19.55 15.27 -26.06 19.75 -6.31 4.48 -26.88 19.55 -45.41 33.60 -44.79 33.80 -61.69 46.42 -80.02 59.86 -8.35 6.11 -23.42 17.51 -33.60 25.25 -9.98 7.74 -24.03 18.12 -30.75 23.01 -6.92 4.89 -18.94 13.64 -26.47 19.55 -7.74 5.90 -19.34 14.66 -25.86 19.34 -6.31 4.89 -17.31 13.03 -24.43 18.33 -6.92 5.29 -15.88 12.01 -19.75 14.86 -3.87 3.05 -19.55 14.66 -34.61 26.06 -15.07 11.40 -28.91 21.79 -30.75 22.80 -4.07 2.44 -24.23 17.51 -47.65 35.63 -9.37 7.33 -20.36 15.47 -24.43 18.33 -4.07 2.85 -17.92 13.44 -31.15 23.42 -13.03 10.18 -28.51 21.58 -34.21 25.45 -8.55 5.90 -37.26 27.08 -78.59 58.44 -4.28 3.05 -11.20 8.14 -15.27 11.40 -4.28 3.05 -15.07 11.40 -24.23 18.33 -8.96 6.92 -21.58 16.09 -27.90 20.36 -6.31 4.28 -12.01 8.55 -12.62 9.57 -0.81 1.43 120.95 2.04 346.55 2.04 227.64 0 352.25 0.81 361.01 2.04 38.28 6.11 75.95 26.06 100.79 53.35 23.21 25.66 37.87 57.01 55.99 119.32 6.72 23.01 12.22 42.56 12.22 43.37 0 1.02 -130.72 1.83 -290.56 1.83 l-290.76 -0.20 -49.89 -36.65z"/><path d="M699.41 1345.88 c1.22 -1.83 82.26 -62.92 266.73 -200.56 40.32 -30.13 127.87 -95.49 194.45 -145.38 66.58 -49.68 151.90 -113.41 189.36 -141.31 37.46 -28.10 104.25 -77.98 148.43 -111.17 l80.43 -60.27 -357.34 -1.02 c-403.36 -1.22 -363.86 0.61 -401.93 -18.12 -43.17 -21.38 -72.08 -55.18 -90.81 -106.08 -10.79 -29.93 -28.10 -92.44 -26.06 -94.68 1.43 -1.43 100.99 -2.24 288.72 -2.65 l286.69 -0.61 58.84 43.17 c68.01 50.09 148.03 108.32 203.61 148.84 l38.89 28.10 1.43 19.14 c0.61 10.59 1.22 70.25 1.22 132.76 l-0.20 113.41 -5.90 5.50 c-3.46 3.26 -10.38 8.55 -15.68 12.01 -5.29 3.46 -15.47 11 -22.80 16.49 -7.33 5.70 -25.66 19.34 -40.32 30.13 -14.86 10.79 -29.32 21.58 -32.37 23.82 -3.05 2.24 -7.53 5.50 -10.18 7.13 -2.44 1.63 -8.55 6.11 -13.44 9.77 -4.89 3.67 -17.92 13.44 -29.12 21.79 -11.20 8.35 -23.62 17.51 -27.49 20.36 -3.87 3.05 -16.09 12.01 -26.88 19.95 -10.79 8.14 -22.19 16.49 -25.25 18.73 -2.85 2.24 -7.53 5.50 -9.98 7.13 -2.65 1.63 -13.44 9.77 -24.23 17.92 -10.59 7.94 -19.95 14.66 -20.77 14.66 -0.61 0 -8.14 5.50 -16.70 12.42 -8.35 6.72 -17.71 13.85 -20.56 15.68 -2.85 1.83 -9.37 6.52 -14.46 10.59 -5.09 4.07 -11.40 8.76 -14.25 10.59 -2.85 1.83 -9.98 6.92 -15.68 11.20 -5.90 4.28 -19.55 14.25 -30.34 21.99 -10.79 7.94 -26.27 19.55 -34.41 26.06 -8.14 6.31 -15.47 11.61 -16.29 11.61 -0.81 0 -5.09 3.26 -9.77 7.13 -4.48 3.87 -9.16 7.13 -10.18 7.13 -1.02 0 -6.52 3.26 -12.01 7.33 -12.22 8.55 -39.30 20.16 -61.69 25.86 -15.68 4.07 -22.40 4.28 -169.61 4.89 -106.49 0.61 -153.12 0.20 -152.10 -1.43z"/></g></svg></div>
+          <div>
+            <div class="topbar-logo-name">ZVISION</div>
+            <div class="topbar-logo-sub">AUTOMATION</div>
+          </div>
+        </div>
+        <div class="footer-tagline" style="margin-top:8px;max-width:280px;">
+          Automação que opera. Resultado que aparece.
+        </div>
+      </div>
+
+      <nav class="footer-nav" aria-label="Navegação do rodapé">
+        <a href="#hero">Início</a>
+        <a href="#processo">Como Funciona</a>
+        <a href="#entregaveis">Entregáveis</a>
+        <a href="#diferenciais">Diferenciais</a>
+        <a href="#investimento">Investimento</a>
+        <a href="#contato">Contato</a>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Zvision Automation · CYBER-CORE PRD · v1.0</div>
+      <div class="footer-status">
+        <div class="live-dot live-dot-success" aria-hidden="true"></div>
+        SISTEMA ATIVO
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── Topbar scroll ── */
+  const topbar = document.getElementById('topbar');
+  window.addEventListener('scroll', () => {
+    topbar.classList.toggle('scrolled', window.scrollY > 20);
+  }, { passive: true });
+
+  /* ── Scroll reveal (IntersectionObserver) ── */
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        revealObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => revealObs.observe(el));
+
+  /* ── Panel bars animate on load ── */
+  setTimeout(() => {
+    document.querySelectorAll('.panel-bar-fill').forEach(el => {
+      el.style.width = el.style.getPropertyValue('--w') || el.getAttribute('style').match(/--w:([^;]+)/)?.[1] || '70%';
+    });
+  }, 800);
+
+  /* ── Terminal progress bars ── */
+  const termObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.t-progress-fill').forEach(bar => {
+          bar.classList.add('go');
+        });
+        termObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('#solucao, #diferenciais').forEach(s => termObs.observe(s));
+
+  /* ── Accordion ── */
+  document.querySelectorAll('.acc-trigger').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+      const item = trigger.closest('.acc-item');
+      const isOpen = item.classList.contains('open');
+      // Close all
+      document.querySelectorAll('.acc-item.open').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.acc-trigger').setAttribute('aria-expanded', 'false');
+      });
+      // Open clicked if was closed
+      if (!isOpen) {
+        item.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  /* ── Form validation & submit → /api/contact ── */
+  const form = document.getElementById('contact-form');
+  const formError = document.getElementById('form-error');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let valid = true;
+
+    const nome   = document.getElementById('f-nome');
+    const email  = document.getElementById('f-email');
+    const eNome  = document.getElementById('e-nome');
+    const eEmail = document.getElementById('e-email');
+
+    // Reset errors
+    [nome, email].forEach(f => f.classList.remove('error'));
+    [eNome, eEmail].forEach(el => el.style.display = 'none');
+    if (formError) formError.style.display = 'none';
+
+    if (!nome.value.trim()) {
+      nome.classList.add('error');
+      eNome.style.display = 'block';
+      valid = false;
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(email.value.trim())) {
+      email.classList.add('error');
+      eEmail.style.display = 'block';
+      valid = false;
+    }
+
+    if (!valid) return;
+
+    const btn     = form.querySelector('button[type="submit"]');
+    const empresa = document.getElementById('f-empresa').value.trim();
+    const mensagem = document.getElementById('f-msg').value.trim();
+
+    // Loading state
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ENVIANDO...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: nome.value.trim(), email: email.value.trim(), empresa, mensagem })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Success
+      form.reset();
+      btn.style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    } catch {
+      // Error state
+      btn.textContent = 'INICIAR MISSÃO';
+      btn.disabled = false;
+      if (formError) formError.style.display = 'block';
+    }
+  });
+
+  /* ── Mobile drawer ── */
+  const burgerBtn = document.getElementById('burger-btn');
+  const mobileDrawer = document.getElementById('mobile-drawer');
+  burgerBtn.addEventListener('click', () => {
+    const isOpen = mobileDrawer.classList.toggle('open');
+    burgerBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+  // Close drawer when any link inside is clicked
+  mobileDrawer.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileDrawer.classList.remove('open');
+      burgerBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  /* ── Smooth focus on CTA click (mobile) ── */
+  document.querySelectorAll('a[href="#contato"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('contato').scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => document.getElementById('f-nome').focus(), 700);
+    });
+  });
+</script>
+</body>
+</html>
