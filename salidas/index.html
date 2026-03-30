@@ -84,6 +84,10 @@
       from { width: 0%; }
       to   { width: var(--bar-w, 75%); }
     }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
 
     /* ═══════════════════════════════════════
        TACTICAL GRID (background)
@@ -301,6 +305,112 @@
       transition: color 0.15s;
     }
     .topbar-nav a:hover { color: var(--accent-primary); }
+
+    /* ACESSAR CRM outline button */
+    .btn-crm {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: var(--radius-button);
+      border: 1px solid rgba(162,230,53,0.4);
+      color: var(--text-secondary);
+      background: transparent;
+      white-space: nowrap;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+    .btn-crm:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+    .btn-crm svg { flex-shrink: 0; }
+
+    /* Topbar right cluster (CRM + primary CTA) */
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Hamburger button (mobile only) */
+    .topbar-burger {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .topbar-burger span {
+      display: block;
+      height: 1.5px;
+      background: var(--text-secondary);
+      border-radius: 1px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .topbar-burger[aria-expanded="true"] span:nth-child(1) {
+      transform: translateY(6.5px) rotate(45deg);
+    }
+    .topbar-burger[aria-expanded="true"] span:nth-child(2) {
+      opacity: 0;
+    }
+    .topbar-burger[aria-expanded="true"] span:nth-child(3) {
+      transform: translateY(-6.5px) rotate(-45deg);
+    }
+
+    /* Mobile nav drawer */
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      top: 52px;
+      left: 0; right: 0;
+      background: rgba(5,5,6,0.97);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-default);
+      z-index: 998;
+      padding: 20px 24px 28px;
+      flex-direction: column;
+      gap: 0;
+    }
+    .mobile-drawer.open { display: flex; }
+    .mobile-drawer a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-default);
+      transition: color 0.15s;
+    }
+    .mobile-drawer a:hover { color: var(--accent-primary); }
+    .mobile-drawer .drawer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .mobile-drawer .btn-crm,
+    .mobile-drawer .btn { justify-content: center; width: 100%; }
+
+    /* Mobile: hide diag CTA + CRM btn in topbar, show burger */
+    .topbar-diag { display: none; }
+    .topbar-crm-desktop { display: none; }
+    @media (min-width: 768px) {
+      .topbar-diag { display: inline-flex; }
+      .topbar-crm-desktop { display: inline-flex; }
+      .topbar-burger { display: none; }
+    }
 
     /* ═══════════════════════════════════════
        SECTION: HERO
@@ -1172,6 +1282,20 @@
       margin-top: 14px;
     }
 
+    .form-tx-error {
+      display: none;
+      padding: 14px 16px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-card);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--status-error);
+      text-align: center;
+      letter-spacing: 1px;
+      margin-top: 14px;
+    }
+
     /* What happens next panel */
     .next-steps {
       padding: 28px;
@@ -1352,6 +1476,61 @@
     }
 
     /* ═══════════════════════════════════════
+       MOBILE-FIRST POLISH — max 639px
+    ═══════════════════════════════════════ */
+    @media (max-width: 639px) {
+      /* Prevent any element from breaking out */
+      body { overflow-x: hidden; }
+      img, svg, video, iframe { max-width: 100%; }
+
+      /* Hero: tighter padding, no panel on very small */
+      #hero { padding: 100px 20px 60px; }
+      .hero-inner { gap: 32px; }
+      .hero-content { max-width: 100%; }
+      .hero-headline { font-size: clamp(28px, 8vw, 40px); }
+      .hero-sub { font-size: 15px; }
+      .hero-ctas { flex-direction: column; }
+      .hero-ctas .btn { width: 100%; justify-content: center; }
+
+      /* Stats: 2×2 grid on mobile */
+      .hero-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 20px;
+      }
+
+      /* Sections padding */
+      #problema, #solucao, #processo, #entregaveis,
+      #diferenciais, #objecoes, #investimento,
+      #contato { padding-left: 20px; padding-right: 20px; }
+      #footer { padding-left: 20px; padding-right: 20px; }
+
+      /* Problem grid: 1 col */
+      .problem-grid { grid-template-columns: 1fr; }
+
+      /* Deliverables/diferenciais: 1 col */
+      .entregaveis-grid { grid-template-columns: 1fr; }
+      .dif-grid { grid-template-columns: 1fr; }
+
+      /* Contact form: full-width */
+      .contato-inner { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-input { width: 100%; }
+      .btn-full { width: 100%; }
+
+      /* Footer: column */
+      .footer-top { flex-direction: column; gap: 20px; }
+      .footer-nav { flex-direction: column; gap: 12px; }
+      .footer-bottom { flex-direction: column; gap: 8px; align-items: flex-start; }
+
+      /* Hero panel hides on very small to avoid overflow */
+      .hero-panel { display: none; }
+
+      /* Topbar padding */
+      #topbar { padding: 0 16px; }
+    }
+
+    /* ═══════════════════════════════════════
        RESPONSIVE — 1280px
     ═══════════════════════════════════════ */
     @media (min-width: 1280px) {
@@ -1386,10 +1565,34 @@
     <a href="#contato">Contato</a>
   </nav>
 
-  <a href="#contato" class="btn btn-primary" aria-label="Solicitar diagnóstico gratuito">
-    SOLICITAR DIAGNÓSTICO
-  </a>
+  <div class="topbar-actions">
+    <a href="https://zvision-crm.vercel.app/auth/login" target="_blank" rel="noopener noreferrer" class="btn-crm topbar-crm-desktop" aria-label="Acessar CRM">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      ACESSAR CRM
+    </a>
+    <a href="#contato" class="btn btn-primary topbar-diag" aria-label="Solicitar diagnóstico gratuito">
+      SOLICITAR DIAGNÓSTICO
+    </a>
+    <button class="topbar-burger" id="burger-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-drawer">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </header>
+
+<!-- Mobile navigation drawer -->
+<div class="mobile-drawer" id="mobile-drawer" role="dialog" aria-label="Menu de navegação">
+  <a href="#processo" class="drawer-link">Como Funciona</a>
+  <a href="#entregaveis" class="drawer-link">Entregáveis</a>
+  <a href="#investimento" class="drawer-link">Investimento</a>
+  <a href="#contato" class="drawer-link">Contato</a>
+  <div class="drawer-actions">
+    <a href="https://zvision-crm.vercel.app/auth/login" target="_blank" rel="noopener noreferrer" class="btn-crm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      ACESSAR CRM
+    </a>
+    <a href="#contato" class="btn btn-primary drawer-link" style="justify-content:center;">SOLICITAR DIAGNÓSTICO</a>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════
      HERO
@@ -2043,6 +2246,9 @@
           Nossa equipe analisa sua operação em até 48h.<br>
           SECURE_LINK_ESTABLISHED // AGUARDE CONTATO.
         </div>
+        <div class="form-tx-error" id="form-error">
+          // FALHA NA TRANSMISSÃO — TENTE NOVAMENTE
+        </div>
       </form>
     </div>
 
@@ -2174,20 +2380,23 @@
     });
   });
 
-  /* ── Form validation & submit ── */
+  /* ── Form validation & submit → /api/contact ── */
   const form = document.getElementById('contact-form');
-  form.addEventListener('submit', e => {
+  const formError = document.getElementById('form-error');
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     let valid = true;
 
-    const nome  = document.getElementById('f-nome');
-    const email = document.getElementById('f-email');
+    const nome   = document.getElementById('f-nome');
+    const email  = document.getElementById('f-email');
     const eNome  = document.getElementById('e-nome');
     const eEmail = document.getElementById('e-email');
 
-    // Reset
+    // Reset errors
     [nome, email].forEach(f => f.classList.remove('error'));
-    [eNome, eEmail].forEach(e => e.style.display = 'none');
+    [eNome, eEmail].forEach(el => el.style.display = 'none');
+    if (formError) formError.style.display = 'none';
 
     if (!nome.value.trim()) {
       nome.classList.add('error');
@@ -2201,16 +2410,48 @@
       valid = false;
     }
 
-    if (valid) {
-      const btn = form.querySelector('button[type="submit"]');
-      btn.textContent = '>> ENVIANDO...';
-      btn.disabled = true;
-      setTimeout(() => {
-        form.reset();
-        btn.style.display = 'none';
-        document.getElementById('form-success').style.display = 'block';
-      }, 1200);
+    if (!valid) return;
+
+    const btn     = form.querySelector('button[type="submit"]');
+    const empresa = document.getElementById('f-empresa').value.trim();
+    const mensagem = document.getElementById('f-msg').value.trim();
+
+    // Loading state
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ENVIANDO...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: nome.value.trim(), email: email.value.trim(), empresa, mensagem })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Success
+      form.reset();
+      btn.style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    } catch {
+      // Error state
+      btn.textContent = 'INICIAR MISSÃO';
+      btn.disabled = false;
+      if (formError) formError.style.display = 'block';
     }
+  });
+
+  /* ── Mobile drawer ── */
+  const burgerBtn = document.getElementById('burger-btn');
+  const mobileDrawer = document.getElementById('mobile-drawer');
+  burgerBtn.addEventListener('click', () => {
+    const isOpen = mobileDrawer.classList.toggle('open');
+    burgerBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+  // Close drawer when any link inside is clicked
+  mobileDrawer.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileDrawer.classList.remove('open');
+      burgerBtn.setAttribute('aria-expanded', 'false');
+    });
   });
 
   /* ── Smooth focus on CTA click (mobile) ── */
