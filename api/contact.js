@@ -18,7 +18,7 @@ export default async function handler(req) {
   const { nome, email, empresa, mensagem } = body;
 
   if (!nome || !email) {
-    return new Response(JSON.stringify({ error: 'Campos obrigatórios faltando' }), {
+    return new Response(JSON.stringify({ error: 'Campos obrigatorios faltando' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -27,28 +27,39 @@ export default async function handler(req) {
   const TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
   const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+  if (!TOKEN || !CHAT_ID) {
+    return new Response(JSON.stringify({ error: 'Missing env vars' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
-  const text =
-    `🎯 NOVO LEAD — ZVISION LANDING\n\n` +
-    `👤 Nome: ${nome}\n` +
-    `📧 Email: ${email}\n` +
-    `🏢 Empresa: ${empresa || 'Não informado'}\n` +
-    `💬 Mensagem: ${mensagem || 'Não informado'}\n\n` +
-    `⏰ ${now}\n` +
-    `🔗 Origem: zvision-landing.vercel.app`;
+  const text = [
+    'NOVO LEAD - ZVISION LANDING',
+    '',
+    `Nome: ${nome}`,
+    `Email: ${email}`,
+    `Empresa: ${empresa || 'Nao informado'}`,
+    `Mensagem: ${mensagem || 'Nao informado'}`,
+    '',
+    `Data: ${now}`,
+    `Origem: zvision-landing.vercel.app`,
+  ].join('\n');
 
   const telegramRes = await fetch(
     `https://api.telegram.org/bot${TOKEN}/sendMessage`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML' }),
+      body: JSON.stringify({ chat_id: CHAT_ID, text }),
     }
   );
 
   if (!telegramRes.ok) {
-    return new Response(JSON.stringify({ error: 'Falha ao enviar para Telegram' }), {
+    const err = await telegramRes.text();
+    return new Response(JSON.stringify({ error: 'Telegram error', detail: err }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
