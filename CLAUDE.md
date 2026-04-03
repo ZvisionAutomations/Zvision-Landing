@@ -60,3 +60,11 @@ El usuario puede pedir cambios en lenguaje natural. Para modificar el HTML gener
 - No tiene tests, linter, ni pipeline de build
 - No genera múltiples páginas — solo landing pages de una página
 - No conecta con APIs de pago ni CRMs — el usuario configura eso por su cuenta después del deploy
+
+---
+
+## Zvision OS
+
+Squads e skills disponíveis em `.zvision-os/squads/`
+CLAUDE.md de referência em `.zvision-os/CLAUDE.md`
+Vault em `.zvision-os/obsidian-vault/`

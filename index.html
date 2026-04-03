@@ -1308,7 +1308,7 @@
       box-shadow: 0 0 0 2px rgba(162,230,53,0.1);
     }
     .form-input::placeholder { color: var(--text-muted); }
-    textarea.form-input { resize: vertical; min-height: 120px; }
+    textarea.form-input { resize: none; min-height: 120px; }
     .form-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
     .form-error {
       font-family: 'JetBrains Mono', monospace;
@@ -1413,7 +1413,6 @@
       font-size: 10px;
       color: var(--text-muted);
       letter-spacing: 1px;
-      font-style: italic;
     }
     .footer-nav {
       display: flex;
@@ -1712,7 +1711,7 @@
       ACESSAR CRM
     </a>
     <a href="#contato" class="btn btn-primary topbar-diag" aria-label="Solicitar diagnóstico gratuito">
-      SOLICITAR DIAGNÓSTICO
+      DIAGNÓSTICO GRÁTIS
     </a>
     <button class="topbar-burger" id="burger-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-drawer">
       <span></span><span></span><span></span>
@@ -1731,7 +1730,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       ACESSAR CRM
     </a>
-    <a href="#contato" class="btn btn-primary drawer-link" style="justify-content:center;">SOLICITAR DIAGNÓSTICO</a>
+    <a href="#contato" class="btn btn-primary drawer-link" style="justify-content:center;">SOLICITAR DIAGNÓSTICO GRATUITO</a>
   </div>
 </div>
 
@@ -1743,17 +1742,16 @@
     <div class="hero-content">
       <div class="hero-badge reveal">
         <div class="live-dot live-dot-accent" aria-hidden="true"></div>
-        // AUTOMAÇÃO DE PROCESSOS COM IA
+        // PARA CLÍNICAS · IMOBILIÁRIAS · PMEs EM SP
       </div>
 
       <h1 class="hero-headline reveal reveal-d1">
-        Sua operação não precisa de<span class="br-mobile"></span>
-        mais gente. Precisa de
-        <em>inteligência.</em>
+        Pare de pagar pessoas para fazer<span class="br-mobile"></span>
+        o que a <em>IA faz melhor.</em>
       </h1>
 
       <p class="hero-sub reveal reveal-d2">
-        A Zvision mapeia, implementa e gerencia automações com IA que eliminam trabalho manual, reduzem custo operacional e escalam sua operação sem aumentar headcount.
+        A Zvision identifica os processos que mais consomem tempo da sua equipe, automatiza com IA e fica gerenciando. Você não muda nada na sua operação — só vê o resultado aparecer.
       </p>
 
       <div class="hero-ctas reveal reveal-d3">
@@ -1768,15 +1766,15 @@
       <div class="hero-stats reveal reveal-d4">
         <div class="hero-stat">
           <span class="hero-stat-val">48h</span>
-          <span class="hero-stat-lbl">// Diagnóstico respondido</span>
+          <span class="hero-stat-lbl">// Diagnóstico na sua caixa</span>
         </div>
         <div class="hero-stat">
           <span class="hero-stat-val">100%</span>
-          <span class="hero-stat-lbl">// Operação gerenciada por nós</span>
+          <span class="hero-stat-lbl">// Gerenciado pela Zvision</span>
         </div>
         <div class="hero-stat">
-          <span class="hero-stat-val">0</span>
-          <span class="hero-stat-lbl">// Equipe técnica interna necessária</span>
+          <span class="hero-stat-val">Zero</span>
+          <span class="hero-stat-lbl">// Técnicos internos necessários</span>
         </div>
       </div>
     </div>
@@ -2305,15 +2303,15 @@
   <div class="investimento-inner">
     <div class="section-label reveal section-center">// INVESTIMENTO</div>
     <h2 class="section-title section-title-lg-center reveal reveal-d1">
-      Preço proporcional ao resultado.
+      Custa menos do que uma contratação. Entrega mais.
     </h2>
     <div class="section-rule section-rule-auto reveal reveal-d1"></div>
 
     <div class="pricing-card reveal reveal-d2">
       <div class="pricing-retainer">RETAINER MENSAL</div>
       <div class="pricing-range">R$500 – R$2.000</div>
-      <div class="pricing-period">por mês</div>
-      <div class="pricing-setup">+ Setup inicial sob consulta de escopo</div>
+      <div class="pricing-period">por mês · proporcional ao escopo</div>
+      <div class="pricing-setup">Setup incluso — discutimos no diagnóstico, sem surpresas de custo</div>
 
       <div class="pricing-badge">
         <span class="badge badge-accent">
@@ -2350,10 +2348,10 @@
     <div>
       <div class="section-label reveal">// INICIAR MISSÃO</div>
       <h2 class="section-title contato-headline reveal reveal-d1">
-        Sua operação pode ser diferente em 30 dias.
+        Em 30 dias sua operação vai ser diferente.
       </h2>
       <p class="contato-sub reveal reveal-d2">
-        DIAGNÓSTICO GRATUITO. SEM COMPROMISSO.<br>RESPOSTA EM ATÉ 48H.
+        DIAGNÓSTICO GRATUITO. SEM CONTRATO. SEM EQUIPE TÉCNICA.<br>VOCÊ RECEBE O RETORNO EM ATÉ 48H.
       </p>
 
       <form id="contact-form" novalidate style="margin-top:32px;">
@@ -2379,12 +2377,13 @@
           <input class="form-input" type="text" id="f-empresa" name="empresa" placeholder="Nome da empresa" autocomplete="organization">
         </div>
         <div class="form-group reveal reveal-d3">
-          <label class="form-label" for="f-msg">Mensagem (opcional)</label>
-          <textarea class="form-input" id="f-msg" name="mensagem" placeholder="// Descreva brevemente o processo que mais consome tempo da sua equipe..."></textarea>
+          <label class="form-label" for="f-msg">Qual processo mais trava sua operação? <span style="color:var(--text-muted);font-weight:400;">(opcional)</span></label>
+          <textarea class="form-input" id="f-msg" name="mensagem" placeholder="// Ex: atendimento via WhatsApp, emissão de relatórios, follow-up de vendas..."></textarea>
         </div>
         <div class="reveal reveal-d4">
+          <p style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-bottom:10px;text-align:center;">// Sem compromisso. Resposta em até 48h. Gratuito.</p>
           <button type="submit" class="btn btn-primary btn-full" style="font-size:12px;padding:14px 22px;">
-            INICIAR MISSÃO
+            SOLICITAR DIAGNÓSTICO GRATUITO
           </button>
         </div>
         <div class="form-success" id="form-success">
@@ -2445,7 +2444,7 @@
           </div>
         </div>
         <div class="footer-tagline" style="margin-top:8px;max-width:280px;">
-          Automação que opera. Resultado que aparece.
+          Implementamos. Gerenciamos. Você colhe o resultado.
         </div>
       </div>
 
@@ -2529,9 +2528,11 @@
   /* ── Form validation & submit → /api/contact ── */
   const form = document.getElementById('contact-form');
   const formError = document.getElementById('form-error');
+  let formSubmitting = false;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (formSubmitting) return;
     let valid = true;
 
     const nome   = document.getElementById('f-nome');
@@ -2564,6 +2565,7 @@
     const website  = document.getElementById('f-website').value;
 
     // Loading state
+    formSubmitting = true;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ENVIANDO...';
     btn.disabled = true;
 
@@ -2580,7 +2582,8 @@
       document.getElementById('form-success').style.display = 'block';
     } catch {
       // Error state
-      btn.textContent = 'INICIAR MISSÃO';
+      formSubmitting = false;
+      btn.textContent = 'SOLICITAR DIAGNÓSTICO GRATUITO';
       btn.disabled = false;
       if (formError) formError.style.display = 'block';
     }

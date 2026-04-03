@@ -67,6 +67,15 @@ export default async function handler(req) {
     });
   }
 
+  /* ── Validate Content-Type ── */
+  const contentType = req.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    return new Response(JSON.stringify({ error: 'Invalid request' }), {
+      status: 415,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+    });
+  }
+
   /* ── Parse body ── */
   let body;
   try {
